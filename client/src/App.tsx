@@ -4,12 +4,18 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Dashboard from "@/pages/dashboard";
+import EducationalResourcesPage from "@/pages/educational-resources";
+import GreyRockSimulatorPage from "@/pages/grey-rock-simulator";
+import BoundaryBuilderPage from "@/pages/boundary-builder";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Dashboard} />
+      <Route path="/education" component={EducationalResourcesPage} />
+      <Route path="/grey-rock" component={GreyRockSimulatorPage} />
+      <Route path="/boundaries" component={BoundaryBuilderPage} />
       <Route component={NotFound} />
     </Switch>
   );

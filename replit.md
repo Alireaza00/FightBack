@@ -111,6 +111,11 @@ Changelog:
   * Individual captions and timestamps for each photo
   * File validation and preview functionality
   * Integration with incident entries
+- June 28, 2025. Created full-featured educational platform with:
+  * Educational Resources: Bite-sized lessons on narcissistic abuse, trauma bonds, and manipulation tactics
+  * Grey Rock Simulator: Interactive scenarios with AI-powered feedback for practicing emotionally neutral responses
+  * Boundary Builder: Pre-written templates, violation tracking, and role-playing exercises for boundary setting
+  * Unified navigation system linking all features with shared layout component
 ```
 
 ## User Preferences

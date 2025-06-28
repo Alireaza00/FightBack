@@ -197,3 +197,100 @@ export const moodOptions = [
   "angry",
   "confused"
 ] as const;
+
+// Educational Resources Schema
+export const educationalLessons = pgTable("educational_lessons", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull(), // narcissistic-abuse, trauma-bonds, manipulation-tactics
+  difficulty: text("difficulty").notNull(), // beginner, intermediate, advanced
+  duration: integer("duration").notNull(), // estimated reading time in minutes
+  tags: text("tags").array().default([]),
+  keyTakeaways: text("key_takeaways").array().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userProgress = pgTable("user_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  lessonId: integer("lesson_id").references(() => educationalLessons.id).notNull(),
+  completed: boolean("completed").default(false),
+  completedAt: timestamp("completed_at"),
+  rating: integer("rating"), // 1-5 stars
+  notes: text("notes"),
+});
+
+// Grey Rock Simulator Schema
+export const greyRockScenarios = pgTable("grey_rock_scenarios", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  difficulty: text("difficulty").notNull(), // beginner, intermediate, advanced
+  provocativeMessage: text("provocative_message").notNull(),
+  goodResponses: text("good_responses").array().notNull(),
+  badResponses: text("bad_responses").array().notNull(),
+  tips: text("tips").array().default([]),
+  category: text("category").notNull(), // work, family, partner, ex-partner
+});
+
+export const greyRockAttempts = pgTable("grey_rock_attempts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  scenarioId: integer("scenario_id").references(() => greyRockScenarios.id).notNull(),
+  userResponse: text("user_response").notNull(),
+  aiScore: integer("ai_score"), // 1-100 score from AI
+  aiFeedback: text("ai_feedback"),
+  attemptedAt: timestamp("attempted_at").defaultNow().notNull(),
+});
+
+// Boundary Builder Schema
+export const boundaryTemplates = pgTable("boundary_templates", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  category: text("category").notNull(), // personal, emotional, physical, digital, financial
+  template: text("template").notNull(),
+  example: text("example").notNull(),
+  difficulty: text("difficulty").notNull(), // easy, moderate, challenging
+  tags: text("tags").array().default([]),
+});
+
+export const userBoundaries = pgTable("user_boundaries", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  templateId: integer("template_id").references(() => boundaryTemplates.id),
+  customBoundary: text("custom_boundary").notNull(),
+  category: text("category").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  lastViolated: timestamp("last_violated"),
+  violationCount: integer("violation_count").default(0),
+  notes: text("notes"),
+});
+
+export const boundaryViolations = pgTable("boundary_violations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  boundaryId: integer("boundary_id").references(() => userBoundaries.id).notNull(),
+  incidentId: integer("incident_id").references(() => incidents.id),
+  description: text("description").notNull(),
+  severity: integer("severity").notNull(), // 1-5 scale
+  violatedAt: timestamp("violated_at").defaultNow().notNull(),
+  actionTaken: text("action_taken"),
+});
+
+// Type exports for new schemas
+export type EducationalLesson = typeof educationalLessons.$inferSelect;
+export type InsertEducationalLesson = typeof educationalLessons.$inferInsert;
+export type UserProgress = typeof userProgress.$inferSelect;
+export type InsertUserProgress = typeof userProgress.$inferInsert;
+export type GreyRockScenario = typeof greyRockScenarios.$inferSelect;
+export type InsertGreyRockScenario = typeof greyRockScenarios.$inferInsert;
+export type GreyRockAttempt = typeof greyRockAttempts.$inferSelect;
+export type InsertGreyRockAttempt = typeof greyRockAttempts.$inferInsert;
+export type BoundaryTemplate = typeof boundaryTemplates.$inferSelect;
+export type InsertBoundaryTemplate = typeof boundaryTemplates.$inferInsert;
+export type UserBoundary = typeof userBoundaries.$inferSelect;
+export type InsertUserBoundary = typeof userBoundaries.$inferInsert;
+export type BoundaryViolation = typeof boundaryViolations.$inferSelect;
+export type InsertBoundaryViolation = typeof boundaryViolations.$inferInsert;
