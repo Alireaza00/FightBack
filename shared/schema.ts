@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -294,3 +295,54 @@ export type UserBoundary = typeof userBoundaries.$inferSelect;
 export type InsertUserBoundary = typeof userBoundaries.$inferInsert;
 export type BoundaryViolation = typeof boundaryViolations.$inferSelect;
 export type InsertBoundaryViolation = typeof boundaryViolations.$inferInsert;
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  incidents: many(incidents),
+  userProgress: many(userProgress),
+  greyRockAttempts: many(greyRockAttempts),
+  userBoundaries: many(userBoundaries),
+  boundaryViolations: many(boundaryViolations),
+}));
+
+export const incidentsRelations = relations(incidents, ({ one, many }) => ({
+  user: one(users, { fields: [incidents.userId], references: [users.id] }),
+  audioRecordings: many(audioRecordings),
+}));
+
+export const audioRecordingsRelations = relations(audioRecordings, ({ one }) => ({
+  incident: one(incidents, { fields: [audioRecordings.incidentId], references: [incidents.id] }),
+}));
+
+export const educationalLessonsRelations = relations(educationalLessons, ({ many }) => ({
+  userProgress: many(userProgress),
+}));
+
+export const userProgressRelations = relations(userProgress, ({ one }) => ({
+  user: one(users, { fields: [userProgress.userId], references: [users.id] }),
+  lesson: one(educationalLessons, { fields: [userProgress.lessonId], references: [educationalLessons.id] }),
+}));
+
+export const greyRockScenariosRelations = relations(greyRockScenarios, ({ many }) => ({
+  attempts: many(greyRockAttempts),
+}));
+
+export const greyRockAttemptsRelations = relations(greyRockAttempts, ({ one }) => ({
+  user: one(users, { fields: [greyRockAttempts.userId], references: [users.id] }),
+  scenario: one(greyRockScenarios, { fields: [greyRockAttempts.scenarioId], references: [greyRockScenarios.id] }),
+}));
+
+export const boundaryTemplatesRelations = relations(boundaryTemplates, ({ many }) => ({
+  userBoundaries: many(userBoundaries),
+}));
+
+export const userBoundariesRelations = relations(userBoundaries, ({ one, many }) => ({
+  user: one(users, { fields: [userBoundaries.userId], references: [users.id] }),
+  template: one(boundaryTemplates, { fields: [userBoundaries.templateId], references: [boundaryTemplates.id] }),
+  violations: many(boundaryViolations),
+}));
+
+export const boundaryViolationsRelations = relations(boundaryViolations, ({ one }) => ({
+  user: one(users, { fields: [boundaryViolations.userId], references: [users.id] }),
+  boundary: one(userBoundaries, { fields: [boundaryViolations.boundaryId], references: [userBoundaries.id] }),
+}));

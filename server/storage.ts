@@ -1,4 +1,34 @@
-import { users, incidents, audioRecordings, type User, type InsertUser, type Incident, type InsertIncident, type AudioRecordingDb, type InsertAudioRecording } from "@shared/schema";
+import { 
+  users, 
+  incidents, 
+  audioRecordings, 
+  educationalLessons,
+  userProgress,
+  greyRockScenarios,
+  greyRockAttempts,
+  boundaryTemplates,
+  userBoundaries,
+  boundaryViolations,
+  type User, 
+  type InsertUser, 
+  type Incident, 
+  type InsertIncident, 
+  type AudioRecordingDb, 
+  type InsertAudioRecording,
+  type EducationalLesson,
+  type UserProgress,
+  type InsertUserProgress,
+  type GreyRockScenario,
+  type GreyRockAttempt,
+  type InsertGreyRockAttempt,
+  type BoundaryTemplate,
+  type UserBoundary,
+  type InsertUserBoundary,
+  type BoundaryViolation,
+  type InsertBoundaryViolation
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc, gte, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
@@ -23,111 +53,109 @@ export interface IStorage {
     behaviorTypeDistribution: Record<string, number>;
     weeklyPattern: Record<string, number>;
   }>;
+
+  // Educational Resources
+  getEducationalLessons(): Promise<EducationalLesson[]>;
+  getEducationalLesson(id: number): Promise<EducationalLesson | undefined>;
+  getUserProgress(userId: number): Promise<UserProgress[]>;
+  markLessonComplete(userId: number, lessonId: number, timeSpent: number): Promise<UserProgress>;
+
+  // Grey Rock Simulator
+  getGreyRockScenarios(): Promise<GreyRockScenario[]>;
+  getGreyRockScenario(id: number): Promise<GreyRockScenario | undefined>;
+  createGreyRockAttempt(attempt: InsertGreyRockAttempt): Promise<GreyRockAttempt>;
+  getUserGreyRockAttempts(userId: number): Promise<GreyRockAttempt[]>;
+
+  // Boundary Builder
+  getBoundaryTemplates(): Promise<BoundaryTemplate[]>;
+  getBoundaryTemplate(id: number): Promise<BoundaryTemplate | undefined>;
+  getUserBoundaries(userId: number): Promise<UserBoundary[]>;
+  createUserBoundary(boundary: InsertUserBoundary): Promise<UserBoundary>;
+  updateUserBoundary(id: number, userId: number, boundary: Partial<InsertUserBoundary>): Promise<UserBoundary | undefined>;
+  getBoundaryViolations(userId: number): Promise<BoundaryViolation[]>;
+  createBoundaryViolation(violation: InsertBoundaryViolation): Promise<BoundaryViolation>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private incidents: Map<number, Incident>;
-  private audioRecordings: Map<number, AudioRecordingDb>;
-  private currentUserId: number;
-  private currentIncidentId: number;
-  private currentAudioId: number;
-
-  constructor() {
-    this.users = new Map();
-    this.incidents = new Map();
-    this.audioRecordings = new Map();
-    this.currentUserId = 1;
-    this.currentIncidentId = 1;
-    this.currentAudioId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async getIncidents(userId: number): Promise<Incident[]> {
-    return Array.from(this.incidents.values())
-      .filter(incident => incident.userId === userId)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return await db
+      .select()
+      .from(incidents)
+      .where(eq(incidents.userId, userId))
+      .orderBy(desc(incidents.createdAt));
   }
 
   async getIncident(id: number, userId: number): Promise<Incident | undefined> {
-    const incident = this.incidents.get(id);
-    return incident?.userId === userId ? incident : undefined;
+    const [incident] = await db
+      .select()
+      .from(incidents)
+      .where(and(eq(incidents.id, id), eq(incidents.userId, userId)));
+    return incident || undefined;
   }
 
   async createIncident(incidentData: InsertIncident & { userId: number }): Promise<Incident> {
-    const id = this.currentIncidentId++;
-    const incident: Incident = {
-      ...incidentData,
-      id,
-      createdAt: new Date(),
-    };
-    this.incidents.set(id, incident);
+    const [incident] = await db
+      .insert(incidents)
+      .values(incidentData)
+      .returning();
     return incident;
   }
 
   async updateIncident(id: number, userId: number, incidentData: Partial<InsertIncident>): Promise<Incident | undefined> {
-    const incident = this.incidents.get(id);
-    if (!incident || incident.userId !== userId) {
-      return undefined;
-    }
-    
-    const updated = { ...incident, ...incidentData };
-    this.incidents.set(id, updated);
-    return updated;
+    const [incident] = await db
+      .update(incidents)
+      .set(incidentData)
+      .where(and(eq(incidents.id, id), eq(incidents.userId, userId)))
+      .returning();
+    return incident || undefined;
   }
 
   async deleteIncident(id: number, userId: number): Promise<boolean> {
-    const incident = this.incidents.get(id);
-    if (!incident || incident.userId !== userId) {
-      return false;
-    }
-    
-    this.incidents.delete(id);
-    // Delete associated audio recordings
-    Array.from(this.audioRecordings.entries()).forEach(([audioId, recording]) => {
-      if (recording.incidentId === id) {
-        this.audioRecordings.delete(audioId);
-      }
-    });
-    
-    return true;
+    const result = await db
+      .delete(incidents)
+      .where(and(eq(incidents.id, id), eq(incidents.userId, userId)));
+    return result.rowCount > 0;
   }
 
   async getAudioRecordings(incidentId: number): Promise<AudioRecordingDb[]> {
-    return Array.from(this.audioRecordings.values())
-      .filter(recording => recording.incidentId === incidentId)
-      .sort((a, b) => new Date(b.timestamp!).getTime() - new Date(a.timestamp!).getTime());
+    return await db
+      .select()
+      .from(audioRecordings)
+      .where(eq(audioRecordings.incidentId, incidentId))
+      .orderBy(desc(audioRecordings.timestamp));
   }
 
   async createAudioRecording(recordingData: InsertAudioRecording): Promise<AudioRecordingDb> {
-    const id = this.currentAudioId++;
-    const recording: AudioRecordingDb = {
-      ...recordingData,
-      id,
-      timestamp: new Date(),
-    };
-    this.audioRecordings.set(id, recording);
+    const [recording] = await db
+      .insert(audioRecordings)
+      .values(recordingData)
+      .returning();
     return recording;
   }
 
   async deleteAudioRecording(id: number): Promise<boolean> {
-    return this.audioRecordings.delete(id);
+    const result = await db
+      .delete(audioRecordings)
+      .where(eq(audioRecordings.id, id));
+    return result.rowCount > 0;
   }
 
   async getIncidentStats(userId: number): Promise<{
@@ -138,56 +166,174 @@ export class MemStorage implements IStorage {
     behaviorTypeDistribution: Record<string, number>;
     weeklyPattern: Record<string, number>;
   }> {
-    const userIncidents = Array.from(this.incidents.values())
-      .filter(incident => incident.userId === userId);
-    
+    const userIncidents = await this.getIncidents(userId);
     const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const thisMonthIncidents = userIncidents.filter(
-      incident => new Date(incident.createdAt!) >= firstDayOfMonth
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    const thisMonthIncidents = userIncidents.filter(incident => 
+      new Date(incident.createdAt!) >= thisMonth
     );
 
-    const safetyRatings = userIncidents
-      .map(incident => incident.safetyRating)
-      .filter(rating => rating !== null && rating !== undefined) as number[];
-    
-    const avgSafetyRating = safetyRatings.length > 0 
-      ? safetyRatings.reduce((sum, rating) => sum + rating, 0) / safetyRatings.length
-      : 0;
-
     const behaviorTypeDistribution: Record<string, number> = {};
-    userIncidents.forEach(incident => {
-      behaviorTypeDistribution[incident.behaviorType] = 
-        (behaviorTypeDistribution[incident.behaviorType] || 0) + 1;
-    });
+    const weeklyPattern: Record<string, number> = {};
+    let totalSafetyRating = 0;
+    let totalAudioDuration = 0;
 
-    const weeklyPattern: Record<string, number> = {
-      'Monday': 0, 'Tuesday': 0, 'Wednesday': 0, 'Thursday': 0,
-      'Friday': 0, 'Saturday': 0, 'Sunday': 0
-    };
-    
-    userIncidents.forEach(incident => {
-      const date = new Date(incident.createdAt!);
-      const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-      weeklyPattern[dayName] = (weeklyPattern[dayName] || 0) + 1;
-    });
+    for (const incident of userIncidents) {
+      // Behavior type distribution
+      if (incident.behaviorType) {
+        behaviorTypeDistribution[incident.behaviorType] = 
+          (behaviorTypeDistribution[incident.behaviorType] || 0) + 1;
+      }
 
-    const totalAudioDuration = Array.from(this.audioRecordings.values())
-      .filter(recording => {
-        const incident = this.incidents.get(recording.incidentId);
-        return incident?.userId === userId;
-      })
-      .reduce((total, recording) => total + recording.duration, 0);
+      // Weekly pattern
+      if (incident.createdAt) {
+        const dayOfWeek = incident.createdAt.toLocaleDateString('en-US', { weekday: 'long' });
+        weeklyPattern[dayOfWeek] = (weeklyPattern[dayOfWeek] || 0) + 1;
+      }
+
+      // Safety rating
+      if (incident.safetyRating) {
+        totalSafetyRating += incident.safetyRating;
+      }
+
+      // Audio duration
+      const audioFiles = await this.getAudioRecordings(incident.id);
+      totalAudioDuration += audioFiles.reduce((sum, audio) => sum + audio.duration, 0);
+    }
 
     return {
       total: userIncidents.length,
       thisMonth: thisMonthIncidents.length,
-      avgSafetyRating: Math.round(avgSafetyRating * 10) / 10,
+      avgSafetyRating: userIncidents.length > 0 ? totalSafetyRating / userIncidents.length : 0,
       totalAudioDuration,
       behaviorTypeDistribution,
       weeklyPattern
     };
   }
+
+  // Educational Resources
+  async getEducationalLessons(): Promise<EducationalLesson[]> {
+    return await db.select().from(educationalLessons).orderBy(educationalLessons.category, educationalLessons.difficulty);
+  }
+
+  async getEducationalLesson(id: number): Promise<EducationalLesson | undefined> {
+    const [lesson] = await db.select().from(educationalLessons).where(eq(educationalLessons.id, id));
+    return lesson || undefined;
+  }
+
+  async getUserProgress(userId: number): Promise<UserProgress[]> {
+    return await db.select().from(userProgress).where(eq(userProgress.userId, userId));
+  }
+
+  async markLessonComplete(userId: number, lessonId: number, timeSpent: number): Promise<UserProgress> {
+    const existing = await db
+      .select()
+      .from(userProgress)
+      .where(and(eq(userProgress.userId, userId), eq(userProgress.lessonId, lessonId)));
+
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(userProgress)
+        .set({ 
+          completed: true, 
+          completedAt: new Date(), 
+          timeSpent 
+        })
+        .where(and(eq(userProgress.userId, userId), eq(userProgress.lessonId, lessonId)))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(userProgress)
+        .values({
+          userId,
+          lessonId,
+          completed: true,
+          completedAt: new Date(),
+          timeSpent
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  // Grey Rock Simulator
+  async getGreyRockScenarios(): Promise<GreyRockScenario[]> {
+    return await db.select().from(greyRockScenarios).orderBy(greyRockScenarios.difficulty, greyRockScenarios.category);
+  }
+
+  async getGreyRockScenario(id: number): Promise<GreyRockScenario | undefined> {
+    const [scenario] = await db.select().from(greyRockScenarios).where(eq(greyRockScenarios.id, id));
+    return scenario || undefined;
+  }
+
+  async createGreyRockAttempt(attempt: InsertGreyRockAttempt): Promise<GreyRockAttempt> {
+    const [created] = await db
+      .insert(greyRockAttempts)
+      .values(attempt)
+      .returning();
+    return created;
+  }
+
+  async getUserGreyRockAttempts(userId: number): Promise<GreyRockAttempt[]> {
+    return await db
+      .select()
+      .from(greyRockAttempts)
+      .where(eq(greyRockAttempts.userId, userId))
+      .orderBy(desc(greyRockAttempts.completedAt));
+  }
+
+  // Boundary Builder
+  async getBoundaryTemplates(): Promise<BoundaryTemplate[]> {
+    return await db.select().from(boundaryTemplates).orderBy(boundaryTemplates.category, boundaryTemplates.difficulty);
+  }
+
+  async getBoundaryTemplate(id: number): Promise<BoundaryTemplate | undefined> {
+    const [template] = await db.select().from(boundaryTemplates).where(eq(boundaryTemplates.id, id));
+    return template || undefined;
+  }
+
+  async getUserBoundaries(userId: number): Promise<UserBoundary[]> {
+    return await db
+      .select()
+      .from(userBoundaries)
+      .where(eq(userBoundaries.userId, userId))
+      .orderBy(desc(userBoundaries.createdAt));
+  }
+
+  async createUserBoundary(boundary: InsertUserBoundary): Promise<UserBoundary> {
+    const [created] = await db
+      .insert(userBoundaries)
+      .values(boundary)
+      .returning();
+    return created;
+  }
+
+  async updateUserBoundary(id: number, userId: number, boundary: Partial<InsertUserBoundary>): Promise<UserBoundary | undefined> {
+    const [updated] = await db
+      .update(userBoundaries)
+      .set(boundary)
+      .where(and(eq(userBoundaries.id, id), eq(userBoundaries.userId, userId)))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getBoundaryViolations(userId: number): Promise<BoundaryViolation[]> {
+    return await db
+      .select()
+      .from(boundaryViolations)
+      .where(eq(boundaryViolations.userId, userId))
+      .orderBy(desc(boundaryViolations.createdAt));
+  }
+
+  async createBoundaryViolation(violation: InsertBoundaryViolation): Promise<BoundaryViolation> {
+    const [created] = await db
+      .insert(boundaryViolations)
+      .values(violation)
+      .returning();
+    return created;
+  }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

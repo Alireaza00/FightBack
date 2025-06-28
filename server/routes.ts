@@ -223,6 +223,184 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Educational Resources endpoints
+  app.get("/api/educational/lessons", async (req, res) => {
+    try {
+      const lessons = await storage.getEducationalLessons();
+      res.json(lessons);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch lessons" });
+    }
+  });
+
+  app.get("/api/educational/lessons/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const lesson = await storage.getEducationalLesson(id);
+      if (!lesson) {
+        return res.status(404).json({ error: "Lesson not found" });
+      }
+      res.json(lesson);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch lesson" });
+    }
+  });
+
+  app.get("/api/educational/progress", async (req, res) => {
+    try {
+      const progress = await storage.getUserProgress(1);
+      res.json(progress);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch progress" });
+    }
+  });
+
+  app.post("/api/educational/complete/:lessonId", async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const { timeSpent } = req.body;
+      const progress = await storage.markLessonComplete(1, lessonId, timeSpent || 0);
+      res.json(progress);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark lesson complete" });
+    }
+  });
+
+  // Grey Rock Simulator endpoints
+  app.get("/api/greyrock/scenarios", async (req, res) => {
+    try {
+      const scenarios = await storage.getGreyRockScenarios();
+      res.json(scenarios);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch scenarios" });
+    }
+  });
+
+  app.get("/api/greyrock/scenarios/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const scenario = await storage.getGreyRockScenario(id);
+      if (!scenario) {
+        return res.status(404).json({ error: "Scenario not found" });
+      }
+      res.json(scenario);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch scenario" });
+    }
+  });
+
+  app.post("/api/greyrock/attempts", async (req, res) => {
+    try {
+      const { scenarioId, userResponse, aiScore, aiFeedback } = req.body;
+      const attempt = await storage.createGreyRockAttempt({
+        userId: 1,
+        scenarioId,
+        userResponse,
+        aiScore,
+        aiFeedback
+      });
+      res.status(201).json(attempt);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create attempt" });
+    }
+  });
+
+  app.get("/api/greyrock/attempts", async (req, res) => {
+    try {
+      const attempts = await storage.getUserGreyRockAttempts(1);
+      res.json(attempts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch attempts" });
+    }
+  });
+
+  // Boundary Builder endpoints
+  app.get("/api/boundaries/templates", async (req, res) => {
+    try {
+      const templates = await storage.getBoundaryTemplates();
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch boundary templates" });
+    }
+  });
+
+  app.get("/api/boundaries/templates/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const template = await storage.getBoundaryTemplate(id);
+      if (!template) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch template" });
+    }
+  });
+
+  app.get("/api/boundaries", async (req, res) => {
+    try {
+      const boundaries = await storage.getUserBoundaries(1);
+      res.json(boundaries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch user boundaries" });
+    }
+  });
+
+  app.post("/api/boundaries", async (req, res) => {
+    try {
+      const { templateId, customBoundary, category } = req.body;
+      const boundary = await storage.createUserBoundary({
+        userId: 1,
+        templateId,
+        customBoundary,
+        category
+      });
+      res.status(201).json(boundary);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create boundary" });
+    }
+  });
+
+  app.put("/api/boundaries/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const boundary = await storage.updateUserBoundary(id, 1, updates);
+      if (!boundary) {
+        return res.status(404).json({ error: "Boundary not found" });
+      }
+      res.json(boundary);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update boundary" });
+    }
+  });
+
+  app.get("/api/boundaries/violations", async (req, res) => {
+    try {
+      const violations = await storage.getBoundaryViolations(1);
+      res.json(violations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch violations" });
+    }
+  });
+
+  app.post("/api/boundaries/violations", async (req, res) => {
+    try {
+      const { boundaryId, description, severity, emotionalImpact, actionTaken } = req.body;
+      const violation = await storage.createBoundaryViolation({
+        userId: 1,
+        boundaryId,
+        description,
+        severity,
+        emotionalImpact,
+        actionTaken
+      });
+      res.status(201).json(violation);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create violation" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
