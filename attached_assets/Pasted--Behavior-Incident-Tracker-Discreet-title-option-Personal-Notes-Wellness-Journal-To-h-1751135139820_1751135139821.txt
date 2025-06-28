@@ -1,0 +1,73 @@
+"Behavior & Incident Tracker"
+(Discreet title option: "Personal Notes", "Wellness Journal")
+
+To help users:
+
+Recognize patterns of abuse
+Collect evidence for legal/therapeutic use
+Gain clarity on toxic dynamics
+Build confidence in decisions (e.g., leaving the relationship)
+Each entry includes:
+
+Date & Time
+Type of Behavior (dropdown: gaslighting, love-bombing, triangulation, silent treatment, etc.)
+Description (what happened)
+Your Feelings (how you felt before/during/after)
+Impact (did this affect your self-esteem, finances, relationships?)
+Attachments (optional: screenshot, audio note, photo — stored securely)
+Mood Tagging (before/after interaction)
+Safety Level Rating (1–5: how unsafe you felt during the incident)
+Visualizes logged data:
+
+Frequency of incidents over time
+Types of abuse most common
+Emotional trends (linked to mood tags)
+High-risk behavior alerts (e.g., escalating aggression)
+Export logs as PDF or CSV (with optional password protection)
+Cloud backup (Firebase encrypted storage)
+Option to store encrypted backups in third-party services (Google Drive, iCloud)
+🔒 All entries should be encrypted locally if offline-first, and synced securely via Firebase Authentication.
+
+Use open router Api for Gemini to:
+
+Summarize entries for clarity
+Help reframe thoughts after logging intense incidents
+Offer coping strategies based on logged content
+Generate objective summaries for legal/therapy sessions
+Example Prompt:
+"Summarize the key behaviors from my last 7 entries and explain how they align with narcissistic abuse patterns."
+
+Emergency checklist (e.g., safe contacts, escape plan, documents to gather)
+Legal resources (based on location: restraining orders, custody, divorce)
+Local support groups or therapists (geo-based search)
+Crisis hotline integration (text/chat options)
+Optional mode where:
+
+The app icon changes to something neutral (e.g., calculator, weather)
+PIN/fingerprint/FaceID lock
+Fake home screen when opened (shows unrelated content if someone checks phone)
+[Header] Behavior Tracker | Add Entry | Filter by Type
+
+[Entry List]
+• Gaslighting – March 28, 2025
+• Silent Treatment – March 25, 2025
+• Triangulation – March 22, 2025
+
+[Add New Entry Button]
+
+[Dashboard Preview]
+📈 Abuse Type Distribution  
+📅 Weekly Pattern Overview  
+💔 Emotional Impact Timeline
+
+| Feature | Implementation | |--------|----------------| | Encryption | AES-256 encryption for all local logs | | Cloud Sync | Firebase Firestore with user-level access control | | Biometric Login | Fingerprint/FaceID/PIN | | Stealth Mode | Optional disguised app icon & fake interface | | Data Ownership | Users own and control all data | | Auto-delete | Optional scheduled deletion of old logs |
+
+User logs multiple instances where partner denies reality
+App detects pattern and suggests “You may be experiencing gaslighting”
+AI Coach summarizes timeline for clarity
+User exports a PDF summary of emotional abuse and financial manipulation
+AI generates an easy-to-understand timeline of events
+Includes tips on presenting this in court or to a lawyer
+After logging a particularly hurtful incident, the AI Coach says:
+“It’s not your fault. You’re being manipulated. Here’s a grounding exercise to help you feel safe again.”
+
