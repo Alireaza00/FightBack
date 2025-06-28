@@ -74,6 +74,25 @@ export interface IStorage {
   updateUserBoundary(id: number, userId: number, boundary: Partial<InsertUserBoundary>): Promise<UserBoundary | undefined>;
   getBoundaryViolations(userId: number): Promise<BoundaryViolation[]>;
   createBoundaryViolation(violation: InsertBoundaryViolation): Promise<BoundaryViolation>;
+
+  // Subscription Management
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+  toggleSubscriptionPlanStatus(planId: number): Promise<SubscriptionPlan | undefined>;
+  getUserSubscription(userId: number): Promise<UserSubscription | undefined>;
+  createUserSubscription(subscription: InsertUserSubscription): Promise<UserSubscription>;
+  getSubscriptionUsage(userId: number): Promise<{
+    incidentsThisMonth: number;
+    incidentLimit: number;
+    lessonsCompleted: number;
+    greyRockAttempts: number;
+  }>;
+
+  // Admin Functions
+  getAdminMetrics(): Promise<AdminMetric | undefined>;
+  getAllUsers(): Promise<User[]>;
+  updateUser(userId: number, updates: Partial<User>): Promise<User | undefined>;
+  updateUserSubscription(userId: number, tier: string, status: string): Promise<User | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {

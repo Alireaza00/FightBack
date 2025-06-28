@@ -6,7 +6,18 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").unique(),
   password: text("password").notNull(),
+  subscriptionTier: text("subscription_tier").default("free").notNull(), // free, basic, pro, therapeutic
+  subscriptionStatus: text("subscription_status").default("active").notNull(), // active, cancelled, expired
+  subscriptionEndsAt: timestamp("subscription_ends_at"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  monthlyIncidentLimit: integer("monthly_incident_limit").default(10),
+  incidentsThisMonth: integer("incidents_this_month").default(0),
+  lastIncidentReset: timestamp("last_incident_reset").defaultNow(),
+  isAdmin: boolean("is_admin").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const incidents = pgTable("incidents", {
@@ -346,3 +357,109 @@ export const boundaryViolationsRelations = relations(boundaryViolations, ({ one 
   user: one(users, { fields: [boundaryViolations.userId], references: [users.id] }),
   boundary: one(userBoundaries, { fields: [boundaryViolations.boundaryId], references: [userBoundaries.id] }),
 }));
+
+// Subscription Management Schema
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // free, basic, pro, therapeutic
+  displayName: text("display_name").notNull(),
+  price: integer("price").notNull(), // in cents
+  currency: text("currency").default("usd"),
+  interval: text("interval").notNull(), // month, year
+  stripePriceId: text("stripe_price_id"),
+  features: jsonb("features").notNull(),
+  incidentLimit: integer("incident_limit"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  planId: integer("plan_id").references(() => subscriptionPlans.id).notNull(),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  status: text("status").notNull(), // active, cancelled, expired, trial
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  cancelledAt: timestamp("cancelled_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const purchasedModules = pgTable("purchased_modules", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  moduleType: text("module_type").notNull(), // workshop, boundary_script, toolkit
+  moduleName: text("module_name").notNull(),
+  price: integer("price").notNull(),
+  purchasedAt: timestamp("purchased_at").defaultNow().notNull(),
+  accessExpiresAt: timestamp("access_expires_at"),
+});
+
+export const adminMetrics = pgTable("admin_metrics", {
+  id: serial("id").primaryKey(),
+  metricDate: timestamp("metric_date").defaultNow().notNull(),
+  totalUsers: integer("total_users").default(0),
+  activeSubscriptions: integer("active_subscriptions").default(0),
+  monthlyRevenue: integer("monthly_revenue").default(0),
+  newSignups: integer("new_signups").default(0),
+  churnRate: integer("churn_rate").default(0),
+  popularFeatures: jsonb("popular_features"),
+});
+
+// Subscription type definitions
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type InsertUserSubscription = typeof userSubscriptions.$inferInsert;
+export type PurchasedModule = typeof purchasedModules.$inferSelect;
+export type InsertPurchasedModule = typeof purchasedModules.$inferInsert;
+export type AdminMetric = typeof adminMetrics.$inferSelect;
+export type InsertAdminMetric = typeof adminMetrics.$inferInsert;
+
+// Subscription plan features
+export const SUBSCRIPTION_FEATURES = {
+  free: {
+    incidentLimit: 10,
+    educationalLessons: 1,
+    greyRockScenarios: 1,
+    boundaryTemplates: 2,
+    aiAnalysis: false,
+    exportReports: false,
+    prioritySupport: false,
+  },
+  basic: {
+    incidentLimit: -1, // unlimited
+    educationalLessons: -1,
+    greyRockScenarios: 3,
+    boundaryTemplates: 5,
+    aiAnalysis: true,
+    exportReports: false,
+    prioritySupport: false,
+  },
+  pro: {
+    incidentLimit: -1,
+    educationalLessons: -1,
+    greyRockScenarios: -1,
+    boundaryTemplates: -1,
+    aiAnalysis: true,
+    exportReports: true,
+    prioritySupport: true,
+    customBoundaries: true,
+    advancedAnalytics: true,
+  },
+  therapeutic: {
+    incidentLimit: -1,
+    educationalLessons: -1,
+    greyRockScenarios: -1,
+    boundaryTemplates: -1,
+    aiAnalysis: true,
+    exportReports: true,
+    prioritySupport: true,
+    customBoundaries: true,
+    advancedAnalytics: true,
+    hipaaCompliant: true,
+    therapistCollaboration: true,
+    legalDocumentation: true,
+    crisisSupport: true,
+  },
+} as const;

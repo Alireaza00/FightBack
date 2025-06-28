@@ -7,6 +7,8 @@ import Dashboard from "@/pages/dashboard";
 import EducationalResourcesPage from "@/pages/educational-resources";
 import GreyRockSimulatorPage from "@/pages/grey-rock-simulator";
 import BoundaryBuilderPage from "@/pages/boundary-builder";
+import SubscriptionPage from "@/pages/subscription";
+import AdminPage from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +18,8 @@ function Router() {
       <Route path="/education" component={EducationalResourcesPage} />
       <Route path="/grey-rock" component={GreyRockSimulatorPage} />
       <Route path="/boundaries" component={BoundaryBuilderPage} />
+      <Route path="/subscription" component={SubscriptionPage} />
+      <Route path="/admin" component={AdminPage} />
       <Route component={NotFound} />
     </Switch>
   );
