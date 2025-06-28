@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Lock, Mic, MicOff, FileAudio, Trash2, Bot, Key, Save } from "lucide-react";
+import { Lock, Mic, MicOff, FileAudio, Trash2, Bot, Key, Save, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { insertIncidentSchema, behaviorTypes, moodOptions, type InsertIncident } from "@shared/schema";
+import { insertIncidentSchema, behaviorTypes, moodOptions, type InsertIncident, type PhotoAttachment } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import AudioRecorder from "@/components/audio-recorder";
+import PhotoUploader from "@/components/photo-uploader";
 
 const safetyRatings = [
   { value: 1, color: "bg-error-custom", label: "1" },
@@ -34,6 +35,7 @@ const moodEmojis = {
 export default function IncidentForm() {
   const [selectedSafety, setSelectedSafety] = useState<number | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [photos, setPhotos] = useState<PhotoAttachment[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -50,6 +52,7 @@ export default function IncidentForm() {
       moodAfter: "",
       safetyRating: undefined,
       transcription: "",
+      photos: [],
     },
   });
 
@@ -65,6 +68,7 @@ export default function IncidentForm() {
       });
       form.reset();
       setSelectedSafety(null);
+      setPhotos([]);
       queryClient.invalidateQueries({ queryKey: ["/api/incidents"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
     },
@@ -102,6 +106,7 @@ export default function IncidentForm() {
     const submissionData = {
       ...data,
       safetyRating: selectedSafety || undefined,
+      photos: photos,
     };
     createIncidentMutation.mutate(submissionData);
   };
@@ -202,6 +207,22 @@ export default function IncidentForm() {
               )}
             />
 
+            {/* Photo Upload Section */}
+            <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-800">Photo Evidence</h3>
+                <span className="text-sm text-green-600 flex items-center space-x-1">
+                  <Camera className="h-4 w-4" />
+                  <span>Visual Documentation</span>
+                </span>
+              </div>
+              
+              <PhotoUploader 
+                photos={photos} 
+                onPhotosChange={setPhotos} 
+              />
+            </div>
+
             {/* Audio Recording Section */}
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
               <div className="flex items-center justify-between mb-4">
@@ -252,7 +273,8 @@ export default function IncidentForm() {
                         <Textarea 
                           placeholder="Audio transcription will appear here..." 
                           rows={4} 
-                          {...field} 
+                          {...field}
+                          value={field.value || ""}
                         />
                       </FormControl>
                       <FormMessage />
@@ -274,7 +296,8 @@ export default function IncidentForm() {
                       <Textarea 
                         placeholder="How did you feel before, during, and after?" 
                         rows={3} 
-                        {...field} 
+                        {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -291,7 +314,8 @@ export default function IncidentForm() {
                       <Textarea 
                         placeholder="How did this affect you?" 
                         rows={3} 
-                        {...field} 
+                        {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -310,7 +334,7 @@ export default function IncidentForm() {
                     name="moodBefore"
                     render={({ field }) => (
                       <FormItem className="flex-1">
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Before..." />
@@ -333,7 +357,7 @@ export default function IncidentForm() {
                     name="moodAfter"
                     render={({ field }) => (
                       <FormItem className="flex-1">
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="After..." />

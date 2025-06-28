@@ -15,13 +15,14 @@ export const incidents = pgTable("incidents", {
   time: text("time").notNull(),
   behaviorType: text("behavior_type").notNull(),
   description: text("description").notNull(),
-  feelings: text("feelings"),
-  impact: text("impact"),
-  moodBefore: text("mood_before"),
-  moodAfter: text("mood_after"),
+  feelings: text("feelings").default(""),
+  impact: text("impact").default(""),
+  moodBefore: text("mood_before").default(""),
+  moodAfter: text("mood_after").default(""),
   safetyRating: integer("safety_rating"),
-  transcription: text("transcription"),
+  transcription: text("transcription").default(""),
   audioRecordings: jsonb("audio_recordings").$type<AudioRecording[]>().default([]),
+  photos: jsonb("photos").$type<PhotoAttachment[]>().default([]),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -42,12 +43,31 @@ export type AudioRecording = {
   transcription?: string;
 };
 
+export type PhotoAttachment = {
+  id: string;
+  filename: string;
+  caption: string;
+  timestamp: string;
+  size: number;
+  type: string;
+  dataUrl?: string;
+};
+
 export const insertIncidentSchema = createInsertSchema(incidents).omit({
   id: true,
   userId: true,
   createdAt: true,
 }).extend({
   safetyRating: z.number().min(1).max(5).optional(),
+  photos: z.array(z.object({
+    id: z.string(),
+    filename: z.string(),
+    caption: z.string(),
+    timestamp: z.string(),
+    size: z.number(),
+    type: z.string(),
+    dataUrl: z.string().optional(),
+  })).optional(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
