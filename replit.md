@@ -100,6 +100,17 @@ This is a secure behavior and incident tracking application designed to help use
 ```
 Changelog:
 - June 28, 2025. Initial setup
+- June 28, 2025. Added intelligent behavior type detection with:
+  * Smart behavior pattern descriptions and examples
+  * AI-powered suggestions based on incident descriptions
+  * Guided questions for users unfamiliar with abuse patterns
+  * Keyword matching for automatic suggestions
+  * Educational tooltips and help sections
+- June 28, 2025. Added comprehensive photo upload system with:
+  * Multiple image upload with drag & drop
+  * Individual captions and timestamps for each photo
+  * File validation and preview functionality
+  * Integration with incident entries
 ```
 
 ## User Preferences

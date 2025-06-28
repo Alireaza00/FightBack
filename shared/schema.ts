@@ -97,8 +97,97 @@ export const behaviorTypes = [
   "financial-abuse",
   "isolation",
   "verbal-abuse",
+  "intimidation",
+  "controlling-behavior",
+  "jealousy-monitoring",
   "other"
 ] as const;
+
+export const behaviorTypeDescriptions: Record<string, {
+  title: string;
+  description: string;
+  examples: string[];
+  keywords: string[];
+}> = {
+  "gaslighting": {
+    title: "Gaslighting",
+    description: "Making you question your memory, perception, or sanity",
+    examples: ["'That never happened'", "'You're being too sensitive'", "'You're imagining things'"],
+    keywords: ["memory", "crazy", "imagining", "sensitive", "overreacting"]
+  },
+  "love-bombing": {
+    title: "Love-bombing",
+    description: "Excessive affection followed by withdrawal or manipulation",
+    examples: ["Overwhelming gifts then coldness", "Intense attention then ignoring", "Perfect partner then criticism"],
+    keywords: ["gifts", "perfect", "intense", "overwhelming", "then cold"]
+  },
+  "triangulation": {
+    title: "Triangulation", 
+    description: "Bringing other people into conflicts to make you jealous or insecure",
+    examples: ["Comparing you to others", "Flirting to make you jealous", "Getting others to side against you"],
+    keywords: ["comparing", "jealous", "flirting", "other people", "ex"]
+  },
+  "silent-treatment": {
+    title: "Silent Treatment",
+    description: "Ignoring you, refusing to communicate, or shutting you out",
+    examples: ["Not responding to texts", "Acting like you don't exist", "Giving cold shoulder"],
+    keywords: ["ignoring", "silent", "not talking", "cold", "shutting out"]
+  },
+  "projection": {
+    title: "Projection",
+    description: "Accusing you of things they are actually doing themselves",
+    examples: ["Accusing you of cheating while they cheat", "Calling you controlling", "Saying you're manipulative"],
+    keywords: ["accusing", "you always", "you never", "hypocrite"]
+  },
+  "emotional-manipulation": {
+    title: "Emotional Manipulation",
+    description: "Using guilt, shame, or fear to control your actions",
+    examples: ["'If you loved me, you would...'", "Threatening self-harm", "Making you feel guilty"],
+    keywords: ["guilt", "if you loved me", "threatening", "your fault"]
+  },
+  "financial-abuse": {
+    title: "Financial Abuse",
+    description: "Controlling your money, access to funds, or financial decisions",
+    examples: ["Taking your paycheck", "Hiding money", "Preventing you from working", "Running up debt"],
+    keywords: ["money", "paycheck", "work", "debt", "credit card", "spending"]
+  },
+  "isolation": {
+    title: "Isolation",
+    description: "Cutting you off from friends, family, or support systems",
+    examples: ["'Your friends don't like me'", "Preventing visits", "Moving you away", "Monitoring contacts"],
+    keywords: ["friends", "family", "visit", "contact", "alone", "isolate"]
+  },
+  "verbal-abuse": {
+    title: "Verbal Abuse",
+    description: "Name-calling, yelling, threats, or degrading language",
+    examples: ["Calling you names", "Screaming at you", "Put-downs", "Threats of violence"],
+    keywords: ["yelling", "screaming", "stupid", "worthless", "threatening", "name calling"]
+  },
+  "intimidation": {
+    title: "Intimidation",
+    description: "Using physical presence, objects, or threats to scare you",
+    examples: ["Getting in your face", "Breaking things", "Aggressive driving", "Threatening gestures"],
+    keywords: ["scary", "breaking things", "aggressive", "threatening", "intimidating"]
+  },
+  "controlling-behavior": {
+    title: "Controlling Behavior",
+    description: "Dictating what you can do, wear, say, or where you can go",
+    examples: ["Telling you what to wear", "Checking your phone", "Deciding for you", "Setting rules"],
+    keywords: ["controlling", "rules", "permission", "checking phone", "what to wear"]
+  },
+  "jealousy-monitoring": {
+    title: "Jealousy & Monitoring",
+    description: "Excessive jealousy and monitoring your activities or relationships",
+    examples: ["Checking your phone/email", "Following you", "Interrogating about your day", "Tracking location"],
+    keywords: ["jealous", "checking", "following", "tracking", "where were you", "who were you with"]
+  },
+  "other": {
+    title: "Other Concerning Behavior",
+    description: "Other patterns that don't fit the above categories but feel wrong",
+    examples: ["Trust your instincts", "Something feels off", "Pattern you can't name"],
+    keywords: ["feels wrong", "uncomfortable", "strange", "concerning"]
+  }
+} as const;
 
 export const moodOptions = [
   "calm",

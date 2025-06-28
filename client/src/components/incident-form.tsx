@@ -14,6 +14,7 @@ import { insertIncidentSchema, behaviorTypes, moodOptions, type InsertIncident, 
 import { apiRequest } from "@/lib/queryClient";
 import AudioRecorder from "@/components/audio-recorder";
 import PhotoUploader from "@/components/photo-uploader";
+import BehaviorTypeSelector from "@/components/behavior-type-selector";
 
 const safetyRatings = [
   { value: 1, color: "bg-error-custom", label: "1" },
@@ -162,27 +163,19 @@ export default function IncidentForm() {
               />
             </div>
 
-            {/* Behavior Type */}
+            {/* Smart Behavior Type Selector */}
             <FormField
               control={form.control}
               name="behaviorType"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Behavior Type</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select behavior type..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {behaviorTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <BehaviorTypeSelector
+                      value={field.value}
+                      onChange={field.onChange}
+                      description={form.watch("description")}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
